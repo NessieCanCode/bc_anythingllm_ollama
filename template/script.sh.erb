@@ -15,7 +15,7 @@ if [ "$HAS_GPU" == "true" ]; then NV_FLAG="--nv"; else NV_FLAG=""; fi
 log "GPU Support Enabled: $HAS_GPU"
 
 # 2. Setup Model Bindings
-export SHARED_MODELS="/opt/unmanaged/images/llm/models/models"
+export SHARED_MODELS="/opt/llm/models/models"
 export USER_OLLAMA_MODELS="$HOME/.ollama/models"
 
 rm -rf "$USER_OLLAMA_MODELS"
@@ -69,16 +69,16 @@ singularity exec $NV_FLAG "$OLLAMA_SIF" ollama run "<%= context.llm_model %>" /d
 # ----------------------------------------
 # 4.5 Start the HPC MCP Server (Host-level SSE Mode)
 # ----------------------------------------
-log "Starting AnythingLLM-HPC-MCP server on host port $MCP_PORT..."
-
-/opt/unmanaged/images/llm/AnythingLLM-HPC-MCP --http $MCP_PORT > "$JOB_LOGS/mcp-hpc.log" 2>&1 &
-MCP_PID=$!
-
+# log "Starting AnythingLLM-HPC-MCP server on host port $MCP_PORT..."
+#
+# /opt/llm/AnythingLLM-HPC-MCP --http $MCP_PORT > "$JOB_LOGS/mcp-hpc.log" 2>&1 &
+# MCP_PID=$!
+#
 # Quick check to ensure the MCP server didn't crash instantly
-sleep 2
-if ! kill -0 $MCP_PID 2>/dev/null; then
-    log "ERROR: HPC MCP Server failed to start! Check logs/mcp-hpc.log"
-fi
+# sleep 2
+# if ! kill -0 $MCP_PID 2>/dev/null; then
+#    log "ERROR: HPC MCP Server failed to start! Check logs/mcp-hpc.log"
+# fi
 
 log "Starting AnythingLLM on internal port $ALLM_INTERNAL_PORT..."
 export SINGULARITYENV_STORAGE_DIR="/app/server/storage"
