@@ -31,10 +31,10 @@ log "Assigned Ollama API Port: $OLLAMA_PORT"
 log "Assigned MCP Server Port: $MCP_PORT"
 
 # 2. Define Image Paths
-export OLLAMA_SIF="/opt/unmanaged/images/llm/ollama.sif"
-export ALLM_SIF="/opt/unmanaged/images/llm/anythingllm.sif"
-export TUNNL_SIF="/opt/unmanaged/images/llm/tunnl.sh-local.sif"
-export OLLAMA_MODELS_DIR="/opt/unmanaged/images/llm/models"
+export OLLAMA_SIF="/opt/llm/ollama.sif"
+export ALLM_SIF="/opt/llm/anythingllm.sif"
+export TUNNL_SIF="/opt/llm/tunnl.sh-local.sif"
+export OLLAMA_MODELS_DIR="/opt/llm/models"
 
 # 3. Define user storage
 export ALLM_USER_STORAGE="${HOME}/.anythingllm_storage"
@@ -54,17 +54,17 @@ EMBEDDING_ENGINE=native
 EOF
 
 # 4.5 Create MCP server config for AnythingLLM (SSE Mode)
-mkdir -p "$ALLM_USER_STORAGE/plugins"
-cat <<EOF > "$ALLM_USER_STORAGE/plugins/anythingllm_mcp_servers.json"
-{
-  "mcpServers": {
-    "HPC": {
-      "type": "sse",
-      "url": "http://127.0.0.1:${MCP_PORT}/sse"
-    }
-  }
-}
-EOF
+# mkdir -p "$ALLM_USER_STORAGE/plugins"
+# cat <<EOF > "$ALLM_USER_STORAGE/plugins/anythingllm_mcp_servers.json"
+# {
+#   "mcpServers": {
+#     "HPC": {
+#       "type": "sse",
+#       "url": "http://127.0.0.1:${MCP_PORT}/sse"
+#     }
+#   }
+# }
+# EOF
 
 # 5. GPU Detection
 if [ "<%= context.gpu_type %>" == "none" ]; then
