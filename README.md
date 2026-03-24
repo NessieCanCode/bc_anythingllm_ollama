@@ -14,7 +14,7 @@ It dynamically scales to fit the requested hardware, allowing researchers to run
 ---
 
 ## Architecture
-Because OOD allocates a single port per interactive session, this app uses a lightweight reverse proxy (`tunnl.sh`) container to fix the route with the AnythingLLM container, which in turn communicates with the Ollama container via internal localhost ports.
+Because Open OnDemand serves interactive apps via dynamic subpaths `/rnode/<hostname>/<port>/`, apps expecting the domain root `/`, like AnythingLLM, will fail to route properly. We solve this using `tunnl.sh-local`, a lightweight container that bridges the traffic to the AnythingLLM frontend. Meanwhile, AnythingLLM communicates securely with the Ollama model server over isolated, internal localhost ports.
 
 1. `tunnl.sh-local` (Listens on OOD assigned port, proxies to AnythingLLM)
 2. `AnythingLLM` (Web frontend, RAG pipeline, Vector DB)
