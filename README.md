@@ -51,10 +51,10 @@ singularity pull tunnl.sh-local.sif docker://ghcr.io/sqoia-dev/tunnl.sh-local:la
 To prevent users from downloading massive 40GB+ models into their home directories every time they launch a session, create a shared directory and pre-pull your standard models.
 
 ```bash
-mkdir -p /opt/unmanaged/images/llm/models/models
+mkdir -p /opt/llm/models/models
 
 # Open a shell into the container with the bind mount
-singularity shell --bind /opt/unmanaged/images/llm/models/models:/root/.ollama/models /opt/unmanaged/images/llm/ollama.sif
+singularity shell --bind /opt/llm/models/models:/root/.ollama/models /opt/llm/ollama.sif
 
 # Start the daemon in the background
 Singularity> ollama serve &
