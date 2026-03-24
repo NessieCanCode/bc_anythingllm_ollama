@@ -1,0 +1,42 @@
+---
+batch_connect:
+  template: "basic"
+
+<%
+  cpu_count   = cpu.to_i
+  mem_gb      = mem.to_i
+  gpu_count   = gres.to_i
+  part        = partition.to_s
+  gpu_model   = gpu_type.to_s
+  time_limit  = walltime.to_s
+
+  # Translate form values to Slurm's exact gres.conf strings
+  slurm_gpu_name = (gpu_model == "h200nvl") ? "nvidia_h200_nvl" : gpu_model
+
+  # Build Slurm --gres argument from gpu_type + gpu count
+  gres_arg =
+    if slurm_gpu_name == "none" || gpu_count < 1
+      nil
+    elsif slurm_gpu_name == "any"
+      "gpu:#{gpu_count}"
+    else
+      "gpu:#{slurm_gpu_name}:#{gpu_count}"
+    end
+
+  native_args = [
+    "--job-name=ood_anythingllm",
+    "--partition=#{part}",
+    "--nodes=1",
+    "--cpus-per-task=#{cpu_count}",
+    "--mem=#{mem_gb}G",
+    "--time=#{time_limit}"
+  ]
+
+  native_args << "--gres=#{gres_arg}" if gres_arg
+%>
+
+script:
+  native:
+<% native_args.each do |arg| %>
+    - "<%= arg %>"
+<% end %>

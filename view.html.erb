@@ -1,0 +1,48 @@
+<%- if defined?(is_ready) && is_ready == "true" -%>
+<div class="well">
+<h4>AnythingLLM + Ollama</h4>
+<p>Your secure, private AI environment is now running on <strong><%= host %></strong>.</p>
+<form action="/rnode/<%= host %>/<%= port %>/" method="GET" target="_blank">
+<button class="btn btn-primary" type="submit">
+<i class="fa fa-rocket"></i> Connect to AnythingLLM
+</button>
+</form>
+</div>
+
+<%- if defined?(has_gpu) && has_gpu == "false" -%>
+<div class="alert alert-warning">
+<strong><i class="fa fa-exclamation-triangle"></i> CPU-Only Mode Active</strong><br>
+You launched this session without a GPU. Large models (like Llama 3.3 or Qwen 32B) will crash or run extremely slowly. We recommend sticking to the <strong>Llama 3.1 8B</strong> model for this session.
+</div>
+<%- end -%>
+
+<div class="panel panel-default">
+<div class="panel-heading">
+<h3 class="panel-title">Available Models & Recommendations</h3>
+</div>
+<div class="panel-body">
+<ul>
+<li><strong>Cohere Command R:</strong> Purpose-built for RAG. Best for analyzing and extracting data from uploaded PDFs and documents.</li>
+<li><strong>Qwen 2.5 Coder (32B):</strong> Best for programming tasks, debugging, and script generation.</li>
+<li><strong>GPT-OSS (20B):</strong> Excellent mid-sized model for general purpose chat and writing.</li>
+<li><strong>LLaVA (34B):</strong> Select this model if you need to upload images, charts, or diagrams to your workspace.</li>
+<li><strong>Gemma 2 (27B):</strong> Google's highly efficient open-weight model. Fast and highly capable for general purpose tasks.</li>
+<li><strong>DeepSeek-R1 (14B):</strong> Excellent for step-by-step logic and mathematical reasoning.</li>
+<li><strong>Llama 3.1 (8B):</strong> The most lightweight model. Offers the fastest response times for simple queries and summaries.</li>
+<li><strong>GPT-OSS (120B):</strong> Massive parameter model for highly complex reasoning. <em>(Requires 2x GPUs)</em>.</li>
+<li><strong>Llama 3.3 (70B class):</strong> Heavyweight flagship model for general research and long contexts. <em>(Requires 2x GPUs)</em>.</li>
+</ul>
+</div>
+</div>
+
+<%- else -%>
+<div class="well">
+<h4><i class="fa fa-spinner fa-spin"></i> AnythingLLM is Starting...</h4>
+<p>Your AI environment is being provisioned on <strong><%= defined?(host) ? host : "the compute node" %></strong>.</p>
+<p class="text-muted">The LLM database and proxy server are compiling. This usually takes 30-60 seconds.</p>
+<hr>
+<form action="">
+<button class="btn btn-default btn-sm" type="submit"><i class="fa fa-refresh"></i> Refresh Status</button>
+</form>
+</div>
+<%- end -%>

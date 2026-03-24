@@ -1,0 +1,8 @@
+---
+name: AnythingLLM + Ollama
+category: Interactive Apps
+subcategory: Servers
+description: |
+  Secure, private Large Language Model access running on local HPC cluster nodes. 
+  Includes an Ollama backend and AnythingLLM frontend for document chat and coding assistance.
+role: batch_connect

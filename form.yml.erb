@@ -1,0 +1,552 @@
+<%
+  user_groups =
+    if defined?(OodSupport)
+      OodSupport::User.new.groups.map(&:name)
+    else
+      ENV.fetch("OOD_TEST_GROUPS", "").split(",").reject(&:empty?)
+    end
+
+  public_partitions = {
+    "test"              => { value: "test",              walltime: "00:05:00",  class: "cpu",              slurm: "test" },
+    "short"             => { value: "short",             walltime: "00-01:00:00", class: "cpu",              slurm: "short" },
+    "medium"            => { value: "medium",            walltime: "00-06:00:00", class: "cpu",              slurm: "medium" },
+    "long"              => { value: "long",              walltime: "01-00:00:00", class: "cpu",              slurm: "long" },
+    "bigmem"            => { value: "bigmem",            walltime: "01-00:00:00", class: "cpu",              slurm: "bigmem" },
+    "gpu"               => { value: "gpu",               walltime: "01-00:00:00", class: "gpu_a100_2",       slurm: "gpu" },
+    "cenvalarc.compute" => { value: "cenvalarccompute",  walltime: "01-00:00:00", class: "cpu",              slurm: "cenvalarc.compute" },
+    "cenvalarc.bigmem"  => { value: "cenvalarcbigmem",   walltime: "01-00:00:00", class: "cpu",              slurm: "cenvalarc.bigmem" },
+    "cenvalarc.gpu"     => { value: "cenvalarcgpu",      walltime: "01-00:00:00", class: "gpu_l40s_h200_2",  slurm: "cenvalarc.gpu" }
+  }
+
+  excluded_partitions = %w[
+    sysadmin
+    cenvalarc.osg
+  ]
+
+  partition_access = {
+    "pi.apribram-jones" => {
+      value: "piapribramjones",
+      allow_accounts: %w[project_ucm_apribram-jones],
+      walltime: "07-00:00:00",
+      class: "cpu",
+      slurm: "pi.apribram-jones"
+    },
+    "pi.anierenberg" => {
+      value: "pianierenberg",
+      allow_accounts: %w[project_ucm_anierenberg],
+      walltime: "07-00:00:00",
+      class: "cpu",
+      slurm: "pi.anierenberg"
+    },
+    "pi.amartini" => {
+      value: "piamartini",
+      allow_accounts: %w[project_ucm_amartini],
+      walltime: "07-00:00:00",
+      class: "gpu_l40s_1",
+      slurm: "pi.amartini"
+    },
+    "pi.cisborn" => {
+      value: "picisborn",
+      allow_accounts: %w[project_ucm_cisborn],
+      walltime: "07-00:00:00",
+      class: "gpu_l40s_4",
+      slurm: "pi.cisborn"
+    },
+    "pi.ckim103" => {
+      value: "pickim103",
+      allow_accounts: %w[project_ucm_ckim103],
+      walltime: "07-00:00:00",
+      class: "gpu_a100_h100_1",
+      slurm: "pi.ckim103"
+    },
+    "pi.dstrubbe" => {
+      value: "pidstrubbe",
+      allow_accounts: %w[project_ucm_dstrubbe],
+      walltime: "07-00:00:00",
+      class: "cpu",
+      slurm: "pi.dstrubbe"
+    },
+    "pi.larsson" => {
+      value: "pilarsson",
+      allow_accounts: %w[project_ucm_larsson],
+      walltime: "07-00:00:00",
+      class: "cpu",
+      slurm: "pi.larsson"
+    },
+    "pi.mdawson" => {
+      value: "pimdawson",
+      allow_accounts: %w[project_ucm_mdawson],
+      walltime: "07-00:00:00",
+      class: "cpu",
+      slurm: "pi.mdawson"
+    },
+
+    "dept.appliedmath" => {
+      value: "deptappliedmath",
+      allow_accounts: %w[
+        project_ucm_hbhat project_ucm_bilan project_ucm_adkim project_ucm_rmarcia
+        project_ucm_npetra project_ucm_ssindi project_ucm_mtokman project_ucm_ckim103
+        project_ucm_skhatri3 project_ucm_ctsogka project_ucm_andywan project_ucm_ylei2
+        project_ucm_menon project_ucm_rosemariebongers project_ucm_fblanchette
+        project_ucm_trube project_ucm_jcmeza project_ucm_mtheillard project_ucm_erutter2
+      ],
+      walltime: "07-00:00:00",
+      class: "gpu_a100_2",
+      slurm: "dept.appliedmath"
+    },
+
+    "dept.cogsci" => {
+      value: "deptcogsci",
+      allow_accounts: %w[
+        project_ucm_zaguirre-munoz project_ucm_kbacker project_ucm_ramesh
+        project_ucm_hbortfeld project_ucm_hgunn project_ucm_dhicks5
+        project_ucm_cholbrook project_ucm_djennings3 project_ucm_pmaglio
+        project_ucm_tmarghetis project_ucm_tmatlock project_ucm_dnoelle
+        project_ucm_lace.padilla project_ucm_rryskin project_ucm_psmaldino
+        project_ucm_spivey project_ucm_jyoshimi project_ucm_ckello
+        project_ucm_cjennings3
+      ],
+      walltime: "07-00:00:00",
+      class: "cpu",
+      slurm: "dept.cogsci"
+    },
+
+    "dept.les" => {
+      value: "deptles",
+      allow_accounts: %w[
+        project_ucm_aaadebiyi project_ucm_mbeman project_ucm_gbennett2
+        project_ucm_aaberhe project_ucm_jblois project_ucm_mdawson
+        project_ucm_mindyfindlater project_ucm_cfrank3 project_ucm_mgaiarsa
+        project_ucm_taghezzehei project_ucm_shart4 project_ucm_mhutchinson6
+        project_ucm_skim380 project_ucm_clukens project_ucm_ejmctavish
+        project_ucm_emoran5 project_ucm_poday project_ucm_rryals
+        project_ucm_jsexton2 project_ucm_straina project_ucm_jyeakel
+        project_ucm_xzhang87
+      ],
+      walltime: "07-00:00:00",
+      class: "cpu",
+      slurm: "dept.les"
+    },
+
+    "dept.physics" => {
+      value: "deptphysics",
+      allow_accounts: %w[
+        project_ucm_dbeller project_ucm_hcai6 project_ucm_rchiao project_ucm_cchien5
+        project_ucm_kdasbiswas project_ucm_sghosh project_ucm_agopinathan
+        project_ucm_lhirst project_ucm_dkleckner project_ucm_bliu27
+        project_ucm_sloebman project_ucm_cmenke project_ucm_kmitchell
+        project_ucm_anierenberg project_ucm_jsharping project_ucm_dstrubbe
+        project_ucm_jxu8 project_ucm_ltian
+      ],
+      walltime: "07-00:00:00",
+      class: "cpu",
+      slurm: "dept.physics"
+    },
+
+    "grp.ccbm" => {
+      value: "grpccbm",
+      allow_accounts: %w[
+        project_ucm_agopinathan project_ucm_vmunoz3 project_ucm_mcolvin
+        project_ucm_amerg project_ucm_rbaxter project_ucm_dbeller
+        project_ucm_kdasbiswas project_ucm_kmitchell project_ucm_tye2
+        project_ucm_agopinath project_ucm_ssindi project_ucm_ssukenik
+      ],
+      walltime: "07-00:00:00",
+      class: "cpu",
+      slurm: "grp.ccbm"
+    },
+
+    "grp.insite" => {
+      value: "grpinsite",
+      allow_accounts: %w[
+        project_ucm_gbennett2 project_ucm_nish project_ucm_erutter2
+        project_ucm_esogin project_ucm_skhatri3 project_ucm_camemiya
+        project_ucm_mthompson30 project_ucm_jagrasis project_ucm_ssindi
+      ],
+      walltime: "07-00:00:00",
+      class: "cpu",
+      slurm: "grp.insite"
+    }
+  }
+
+  visible_partitions = public_partitions.dup
+  partition_access.each do |partition_name, meta|
+    next if excluded_partitions.include?(partition_name)
+    if (user_groups & meta[:allow_accounts]).any?
+      visible_partitions[partition_name] = meta
+    end
+  end
+
+  ordered_partition_names =
+    public_partitions.keys + (visible_partitions.keys - public_partitions.keys).sort
+
+  def class_supports_gpu_type?(klass, gpu_type)
+    case gpu_type
+    when "none"
+      klass == "cpu"
+    when "any"
+      %w[gpu_a100_2 gpu_a100_h100_1 gpu_l40s_1 gpu_l40s_4 gpu_l40s_h200_2].include?(klass)
+    when "a100"
+      %w[gpu_a100_2 gpu_a100_h100_1].include?(klass)
+    when "h100"
+      klass == "gpu_a100_h100_1"
+    when "l40s"
+      %w[gpu_l40s_1 gpu_l40s_4 gpu_l40s_h200_2].include?(klass)
+    when "h200nvl"
+      klass == "gpu_l40s_h200_2"
+    else
+      false
+    end
+  end
+
+  def class_supports_gpu_count?(klass, gpu_type, count)
+    case gpu_type
+    when "none"
+      count == 0 && klass == "cpu"
+    when "any"
+      return true if count == 1 && %w[gpu_a100_2 gpu_a100_h100_1 gpu_l40s_1 gpu_l40s_4 gpu_l40s_h200_2].include?(klass)
+      return true if count == 2 && %w[gpu_a100_2 gpu_l40s_4 gpu_l40s_h200_2].include?(klass)
+      false
+    when "a100"
+      return true if count == 1 && %w[gpu_a100_2 gpu_a100_h100_1].include?(klass)
+      return true if count == 2 && %w[gpu_a100_2].include?(klass)
+      false
+    when "h100"
+      count == 1 && klass == "gpu_a100_h100_1"
+    when "l40s"
+      return true if count == 1 && %w[gpu_l40s_1 gpu_l40s_4 gpu_l40s_h200_2].include?(klass)
+      return true if count == 2 && %w[gpu_l40s_4 gpu_l40s_h200_2].include?(klass)
+      false
+    when "h200nvl"
+      return true if count == 1 && klass == "gpu_l40s_h200_2"
+      return true if count == 2 && klass == "gpu_l40s_h200_2"
+      false
+    else
+      false
+    end
+  end
+
+  gpu_types = %w[none any a100 h100 l40s h200nvl]
+%>
+---
+cluster: "pinnacles"
+
+form:
+  - modules
+  - partition
+  - gpu_type
+  - instance_type
+  - llm_model
+  - cpu
+  - mem
+  - gres
+  - walltime
+
+attributes:
+  modules: "singularityce/4.1.0"
+
+  partition:
+    widget: "select"
+    label: "Slurm Partition (Queue)"
+    help: |
+      Select the partition (queue) the job should use.
+    options:
+<% ordered_partition_names.each do |display_name| %>
+<% p = visible_partitions[display_name] %>
+      - [ "<%= display_name %>", "<%= p[:slurm] %>",
+          data-set-walltime: "<%= p[:walltime] %>",
+          data-option-for-gpu-type-none: <%= class_supports_gpu_type?(p[:class], "none") %>,
+          data-option-for-gpu-type-any: <%= class_supports_gpu_type?(p[:class], "any") %>,
+          data-option-for-gpu-type-a100: <%= class_supports_gpu_type?(p[:class], "a100") %>,
+          data-option-for-gpu-type-h100: <%= class_supports_gpu_type?(p[:class], "h100") %>,
+          data-option-for-gpu-type-l40s: <%= class_supports_gpu_type?(p[:class], "l40s") %>,
+          data-option-for-gpu-type-h200nvl: <%= class_supports_gpu_type?(p[:class], "h200nvl") %>
+        ]
+<% end %>
+
+  gpu_type:
+    widget: "select"
+    label: "GPU Type"
+    help: |
+      Choose a GPU model. CPU partitions appear only for "No GPU / CPU only".
+    options:
+      - [ "No GPU / CPU only", "none" ]
+      - [ "Any GPU", "any" ]
+      - [ "A100", "a100" ]
+      - [ "H100", "h100" ]
+      - [ "L40S", "l40s" ]
+      - [ "H200 NVL", "h200nvl" ]
+
+  instance_type:
+    widget: "select"
+    label: "Instance Type"
+    help: |
+      Resource sizes are filtered by selected partition and GPU type.
+    options:
+      - [ "compute_medium", "computemedium",
+          data-set-cpu: 7,
+          data-set-mem: 32,
+          data-set-gres: 0,
+          data-option-for-gpu-type-none: true,
+          data-option-for-gpu-type-any: false,
+          data-option-for-gpu-type-a100: false,
+          data-option-for-gpu-type-h100: false,
+          data-option-for-gpu-type-l40s: false,
+          data-option-for-gpu-type-h200nvl: false,
+<%= ordered_partition_names.map { |display_name|
+      p = visible_partitions[display_name]
+      "          data-option-for-partition-#{p[:slurm]}: #{class_supports_gpu_count?(p[:class], 'none', 0)}"
+    }.join(",\n") %>
+        ]
+
+      - [ "compute_large", "computelarge",
+          data-set-cpu: 14,
+          data-set-mem: 64,
+          data-set-gres: 0,
+          data-option-for-gpu-type-none: true,
+          data-option-for-gpu-type-any: false,
+          data-option-for-gpu-type-a100: false,
+          data-option-for-gpu-type-h100: false,
+          data-option-for-gpu-type-l40s: false,
+          data-option-for-gpu-type-h200nvl: false,
+<%= ordered_partition_names.map { |display_name|
+      p = visible_partitions[display_name]
+      "          data-option-for-partition-#{p[:slurm]}: #{class_supports_gpu_count?(p[:class], 'none', 0)}"
+    }.join(",\n") %>
+        ]
+
+      - [ "compute_xlarge", "computexlarge",
+          data-set-cpu: 28,
+          data-set-mem: 128,
+          data-set-gres: 0,
+          data-option-for-gpu-type-none: true,
+          data-option-for-gpu-type-any: false,
+          data-option-for-gpu-type-a100: false,
+          data-option-for-gpu-type-h100: false,
+          data-option-for-gpu-type-l40s: false,
+          data-option-for-gpu-type-h200nvl: false,
+<%= ordered_partition_names.map { |display_name|
+      p = visible_partitions[display_name]
+      "          data-option-for-partition-#{p[:slurm]}: #{class_supports_gpu_count?(p[:class], 'none', 0)}"
+    }.join(",\n") %>
+        ]
+
+      - [ "compute_2xlarge", "compute2xlarge",
+          data-set-cpu: 56,
+          data-set-mem: 250,
+          data-set-gres: 0,
+          data-option-for-gpu-type-none: true,
+          data-option-for-gpu-type-any: false,
+          data-option-for-gpu-type-a100: false,
+          data-option-for-gpu-type-h100: false,
+          data-option-for-gpu-type-l40s: false,
+          data-option-for-gpu-type-h200nvl: false,
+<%= ordered_partition_names.map { |display_name|
+      p = visible_partitions[display_name]
+      "          data-option-for-partition-#{p[:slurm]}: #{class_supports_gpu_count?(p[:class], 'none', 0)}"
+    }.join(",\n") %>
+        ]
+
+      - [ "gpu_medium", "gpumedium",
+          data-set-cpu: 7,
+          data-set-mem: 32,
+          data-set-gres: 1,
+          data-option-for-gpu-type-none: false,
+          data-option-for-gpu-type-any: true,
+          data-option-for-gpu-type-a100: true,
+          data-option-for-gpu-type-h100: true,
+          data-option-for-gpu-type-l40s: true,
+          data-option-for-gpu-type-h200nvl: true,
+<%= ordered_partition_names.map { |display_name|
+      p = visible_partitions[display_name]
+      val = class_supports_gpu_count?(p[:class], "any", 1) ||
+            class_supports_gpu_count?(p[:class], "a100", 1) ||
+            class_supports_gpu_count?(p[:class], "h100", 1) ||
+            class_supports_gpu_count?(p[:class], "l40s", 1) ||
+            class_supports_gpu_count?(p[:class], "h200nvl", 1)
+      "          data-option-for-partition-#{p[:slurm]}: #{val}"
+    }.join(",\n") %>
+        ]
+
+      - [ "gpu_large", "gpularge",
+          data-set-cpu: 14,
+          data-set-mem: 64,
+          data-set-gres: 1,
+          data-option-for-gpu-type-none: false,
+          data-option-for-gpu-type-any: true,
+          data-option-for-gpu-type-a100: true,
+          data-option-for-gpu-type-h100: true,
+          data-option-for-gpu-type-l40s: true,
+          data-option-for-gpu-type-h200nvl: true,
+<%= ordered_partition_names.map { |display_name|
+      p = visible_partitions[display_name]
+      val = class_supports_gpu_count?(p[:class], "any", 1) ||
+            class_supports_gpu_count?(p[:class], "a100", 1) ||
+            class_supports_gpu_count?(p[:class], "h100", 1) ||
+            class_supports_gpu_count?(p[:class], "l40s", 1) ||
+            class_supports_gpu_count?(p[:class], "h200nvl", 1)
+      "          data-option-for-partition-#{p[:slurm]}: #{val}"
+    }.join(",\n") %>
+        ]
+
+      - [ "gpu_xlarge", "gpuxlarge",
+          data-set-cpu: 28,
+          data-set-mem: 128,
+          data-set-gres: 1,
+          data-option-for-gpu-type-none: false,
+          data-option-for-gpu-type-any: true,
+          data-option-for-gpu-type-a100: true,
+          data-option-for-gpu-type-h100: true,
+          data-option-for-gpu-type-l40s: true,
+          data-option-for-gpu-type-h200nvl: true,
+<%= ordered_partition_names.map { |display_name|
+      p = visible_partitions[display_name]
+      val = class_supports_gpu_count?(p[:class], "any", 1) ||
+            class_supports_gpu_count?(p[:class], "a100", 1) ||
+            class_supports_gpu_count?(p[:class], "h100", 1) ||
+            class_supports_gpu_count?(p[:class], "l40s", 1) ||
+            class_supports_gpu_count?(p[:class], "h200nvl", 1)
+      "          data-option-for-partition-#{p[:slurm]}: #{val}"
+    }.join(",\n") %>
+        ]
+
+      - [ "gpu_2xlarge", "gpu2xlarge",
+          data-set-cpu: 56,
+          data-set-mem: 250,
+          data-set-gres: 2,
+          data-option-for-gpu-type-none: false,
+          data-option-for-gpu-type-any: true,
+          data-option-for-gpu-type-a100: true,
+          data-option-for-gpu-type-h100: false,
+          data-option-for-gpu-type-l40s: true,
+          data-option-for-gpu-type-h200nvl: true,
+<%= ordered_partition_names.map { |display_name|
+      p = visible_partitions[display_name]
+      val = class_supports_gpu_count?(p[:class], "any", 2) ||
+            class_supports_gpu_count?(p[:class], "a100", 2) ||
+            class_supports_gpu_count?(p[:class], "l40s", 2) ||
+            class_supports_gpu_count?(p[:class], "h200nvl", 2)
+      "          data-option-for-partition-#{p[:slurm]}: #{val}"
+    }.join(",\n") %>
+        ]
+
+  llm_model:
+    widget: "select"
+    label: "Default LLM Model"
+    help: |
+      Select the model that will be loaded by default when the AI workspace starts.
+      **Note:** 120B and 70B models will only appear if you select an instance with at least 2 GPUs (gpu_2xlarge).
+    options:
+      - [ "Cohere Command R (Recommended for Documents)", "command-r:latest",
+          data-option-for-instance-type-computemedium: true,
+          data-option-for-instance-type-computelarge: true,
+          data-option-for-instance-type-computexlarge: true,
+          data-option-for-instance-type-compute2xlarge: true,
+          data-option-for-instance-type-gpumedium: true,
+          data-option-for-instance-type-gpularge: true,
+          data-option-for-instance-type-gpuxlarge: true,
+          data-option-for-instance-type-gpu2xlarge: true
+        ]
+      - [ "Qwen 2.5 Coder 32B (Best for Programming)", "qwen2.5-coder:32b",
+          data-option-for-instance-type-computemedium: true,
+          data-option-for-instance-type-computelarge: true,
+          data-option-for-instance-type-computexlarge: true,
+          data-option-for-instance-type-compute2xlarge: true,
+          data-option-for-instance-type-gpumedium: true,
+          data-option-for-instance-type-gpularge: true,
+          data-option-for-instance-type-gpuxlarge: true,
+          data-option-for-instance-type-gpu2xlarge: true
+        ]
+      - [ "GPT-OSS 20B (General Purpose)", "gpt-oss:20b",
+          data-option-for-instance-type-computemedium: true,
+          data-option-for-instance-type-computelarge: true,
+          data-option-for-instance-type-computexlarge: true,
+          data-option-for-instance-type-compute2xlarge: true,
+          data-option-for-instance-type-gpumedium: true,
+          data-option-for-instance-type-gpularge: true,
+          data-option-for-instance-type-gpuxlarge: true,
+          data-option-for-instance-type-gpu2xlarge: true
+        ]
+      - [ "LLaVA 34B (Required for Image/Vision Tasks)", "llava:34b",
+          data-option-for-instance-type-computemedium: true,
+          data-option-for-instance-type-computelarge: true,
+          data-option-for-instance-type-computexlarge: true,
+          data-option-for-instance-type-compute2xlarge: true,
+          data-option-for-instance-type-gpumedium: true,
+          data-option-for-instance-type-gpularge: true,
+          data-option-for-instance-type-gpuxlarge: true,
+          data-option-for-instance-type-gpu2xlarge: true
+        ]
+      - [ "Gemma 2 27B (Fast General Purpose)", "gemma2:27b",
+          data-option-for-instance-type-computemedium: true,
+          data-option-for-instance-type-computelarge: true,
+          data-option-for-instance-type-computexlarge: true,
+          data-option-for-instance-type-compute2xlarge: true,
+          data-option-for-instance-type-gpumedium: true,
+          data-option-for-instance-type-gpularge: true,
+          data-option-for-instance-type-gpuxlarge: true,
+          data-option-for-instance-type-gpu2xlarge: true
+        ]
+      - [ "DeepSeek R1 14B (Fast Mathematical Reasoning)", "deepseek-r1:14b",
+          data-option-for-instance-type-computemedium: true,
+          data-option-for-instance-type-computelarge: true,
+          data-option-for-instance-type-computexlarge: true,
+          data-option-for-instance-type-compute2xlarge: true,
+          data-option-for-instance-type-gpumedium: true,
+          data-option-for-instance-type-gpularge: true,
+          data-option-for-instance-type-gpuxlarge: true,
+          data-option-for-instance-type-gpu2xlarge: true
+        ]
+      - [ "Llama 3.1 8B (Lightweight & Fast)", "llama3.1:8b",
+          data-option-for-instance-type-computemedium: true,
+          data-option-for-instance-type-computelarge: true,
+          data-option-for-instance-type-computexlarge: true,
+          data-option-for-instance-type-compute2xlarge: true,
+          data-option-for-instance-type-gpumedium: true,
+          data-option-for-instance-type-gpularge: true,
+          data-option-for-instance-type-gpuxlarge: true,
+          data-option-for-instance-type-gpu2xlarge: true
+        ]
+      - [ "GPT-OSS 120B (Requires 2x GPUs)", "gpt-oss:120b",
+          data-option-for-instance-type-computemedium: false,
+          data-option-for-instance-type-computelarge: false,
+          data-option-for-instance-type-computexlarge: false,
+          data-option-for-instance-type-compute2xlarge: false,
+          data-option-for-instance-type-gpumedium: false,
+          data-option-for-instance-type-gpularge: false,
+          data-option-for-instance-type-gpuxlarge: false,
+          data-option-for-instance-type-gpu2xlarge: true
+        ]
+      - [ "Llama 3.3 (Requires 2x GPUs)", "llama3.3:latest",
+          data-option-for-instance-type-computemedium: false,
+          data-option-for-instance-type-computelarge: false,
+          data-option-for-instance-type-computexlarge: false,
+          data-option-for-instance-type-compute2xlarge: false,
+          data-option-for-instance-type-gpumedium: false,
+          data-option-for-instance-type-gpularge: false,
+          data-option-for-instance-type-gpuxlarge: false,
+          data-option-for-instance-type-gpu2xlarge: true
+        ]
+
+  cpu:
+    widget: "number_field"
+    value: 0
+    hidden: true
+    skip_label: true
+
+  mem:
+    widget: "number_field"
+    value: 0
+    hidden: true
+    skip_label: true
+
+  gres:
+    widget: "number_field"
+    value: 0
+    hidden: true
+    skip_label: true
+
+  walltime:
+    widget: "text_field"
+    label: "Walltime"
+    value: "00:05:00"

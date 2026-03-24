@@ -1,0 +1,10 @@
+#!/bin/bash
+
+echo "Cleaning up local LLM background processes..."
+
+# Kill processes started by this specific user
+pkill -u $USER -f "ollama serve"
+pkill -u $USER -f "anythingllm"
+
+# Clean up temporary Ollama sockets created in /tmp
+rm -rf /tmp/ollama*
