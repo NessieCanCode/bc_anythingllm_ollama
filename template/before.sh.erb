@@ -20,7 +20,6 @@ module load singularityce/4.1.0
 # 1. Ports: Define the ports required for the relay and the app
 export port=$(find_port)                  # The port OOD expects to connect to
 export EXTERNAL_PORT=${port}              # resolvr listens here
-export TUNNEL_INTERNAL_PORT=$(find_port)  # internal port (reserved for future use)
 export ALLM_INTERNAL_PORT=$(find_port)    # AnythingLLM runs here
 export OLLAMA_PORT=$(find_port)           # Ollama runs here
 export MCP_PORT=$(find_port)              # HPC MCP Server runs here
