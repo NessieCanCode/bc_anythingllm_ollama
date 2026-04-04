@@ -14,9 +14,9 @@ It dynamically scales to fit the requested hardware, allowing researchers to run
 ---
 
 ## Architecture
-Because Open OnDemand serves interactive apps via dynamic subpaths `/rnode/<hostname>/<port>/`, apps expecting the domain root `/`, like AnythingLLM, will fail to route properly. We solve this using `tunnl.sh-local`, a lightweight container that bridges the traffic to the AnythingLLM frontend. Meanwhile, AnythingLLM communicates securely with the Ollama model server over isolated, internal localhost ports.
+Because Open OnDemand serves interactive apps via dynamic subpaths `/rnode/<hostname>/<port>/`, apps expecting the domain root `/`, like AnythingLLM, will fail to route properly. We solve this using `resolvr`, a lightweight SPA subpath router container that bridges the traffic to the AnythingLLM frontend. Meanwhile, AnythingLLM communicates securely with the Ollama model server over isolated, internal localhost ports.
 
-1. `tunnl.sh-local` (Listens on OOD assigned port, proxies to AnythingLLM)
+1. `resolvr` (Listens on OOD assigned port, proxies to AnythingLLM)
 2. `AnythingLLM` (Web frontend, RAG pipeline, Vector DB)
 3. `Ollama` (Backend model runner, dynamically allocates to GPUs)
 
@@ -44,7 +44,7 @@ singularity pull ollama.sif docker://ollama/ollama:latest
 singularity pull anythingllm.sif docker://mintplexlabs/anythingllm:latest
 
 # Pull Reverse Proxy
-singularity pull tunnl.sh-local.sif docker://ghcr.io/sqoia-dev/tunnl.sh-local:latest
+singularity pull resolvr.sif docker://ghcr.io/sqoia-dev/resolvr:latest
 ```
 
 ### Model Directory Setup
@@ -81,7 +81,7 @@ Singularity> exit
    ```bash
    export OLLAMA_SIF="/your/shared/path/ollama.sif"
    export ALLM_SIF="/your/shared/path/anythingllm.sif"
-   export TUNNL_SIF="/your/shared/path/tunnl.sh-local.sif"
+   export RESOLVR_SIF="/your/shared/path/resolvr.sif"
    export SHARED_MODELS="/your/shared/path/models/models"
    ```
 

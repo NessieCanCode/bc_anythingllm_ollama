@@ -23,16 +23,16 @@ mkdir -p "$USER_OLLAMA_MODELS/blobs"
 mkdir -p "$USER_OLLAMA_MODELS/manifests"
 
 # ----------------------------------------
-# 3. Start tunnl.sh-local Server (Direct Proxy Mode)
+# 3. Start resolvr Server (SPA Subpath Router / Direct Proxy Mode)
 # ----------------------------------------
-log "Starting tunnl.sh-local direct proxy on port $EXTERNAL_PORT to $ALLM_INTERNAL_PORT..."
+log "Starting resolvr SPA subpath router on port $EXTERNAL_PORT to $ALLM_INTERNAL_PORT..."
 
 export SINGULARITYENV_EXTERNAL_PORT=$EXTERNAL_PORT
 export SINGULARITYENV_TARGET="127.0.0.1:${ALLM_INTERNAL_PORT}"
 export SINGULARITYENV_BASE_PATH="/rnode/${host}/${port}/"
 
 # Route proxy logs to its own file
-singularity run "$TUNNL_SIF" > "$JOB_LOGS/tunnl.log" 2>&1 &
+singularity run "$RESOLVR_SIF" > "$JOB_LOGS/resolvr.log" 2>&1 &
 
 sleep 3
 
