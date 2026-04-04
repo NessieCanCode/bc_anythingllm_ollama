@@ -19,7 +19,7 @@ module load singularityce/4.1.0
 
 # 1. Ports: Define the ports required for the relay and the app
 export port=$(find_port)                  # The port OOD expects to connect to
-export EXTERNAL_PORT=${port}              # resolvr listens here
+export EXTERNAL_PORT=${port}              # adaptr listens here
 export ALLM_INTERNAL_PORT=$(find_port)    # AnythingLLM runs here
 export OLLAMA_PORT=$(find_port)           # Ollama runs here
 export MCP_PORT=$(find_port)              # HPC MCP Server runs here
@@ -32,7 +32,7 @@ log "Assigned MCP Server Port: $MCP_PORT"
 # 2. Define Image Paths
 export OLLAMA_SIF="/opt/llm/ollama.sif"
 export ALLM_SIF="/opt/llm/anythingllm.sif"
-export RESOLVR_SIF="/opt/llm/resolvr.sif"
+export ADAPTR_SIF="/opt/llm/adaptr.sif"
 export OLLAMA_MODELS_DIR="/opt/llm/models"
 
 # 3. Define user storage
