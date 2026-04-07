@@ -43,7 +43,7 @@ singularity pull ollama.sif docker://ollama/ollama:latest
 # Pull AnythingLLM Frontend
 singularity pull anythingllm.sif docker://mintplexlabs/anythingllm:latest
 
-# Pull Reverse Proxy
+# Pull SPA Subpath Adapter
 singularity pull adaptr.sif docker://ghcr.io/sqoia-dev/adaptr:latest
 ```
 
