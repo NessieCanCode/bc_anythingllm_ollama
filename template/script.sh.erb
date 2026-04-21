@@ -15,30 +15,25 @@ if [ "$HAS_GPU" == "true" ]; then NV_FLAG="--nv"; else NV_FLAG=""; fi
 log "GPU Support Enabled: $HAS_GPU"
 
 # 2. Setup Model Bindings
-export SHARED_MODELS="/opt/llm/models/models"
+export SHARED_MODELS="/opt/unmanaged/images/llm/models/models"
 export USER_OLLAMA_MODELS="$HOME/.ollama/models"
 
 rm -rf "$USER_OLLAMA_MODELS"
 mkdir -p "$USER_OLLAMA_MODELS/blobs"
 mkdir -p "$USER_OLLAMA_MODELS/manifests"
 
-# ----------------------------------------
 # 3. Start adaptr Server (SPA Subpath Router / Direct Proxy Mode)
-# ----------------------------------------
 log "Starting adaptr SPA subpath router on port $EXTERNAL_PORT to $ALLM_INTERNAL_PORT..."
 
 export SINGULARITYENV_EXTERNAL_PORT=$EXTERNAL_PORT
 export SINGULARITYENV_TARGET="127.0.0.1:${ALLM_INTERNAL_PORT}"
 export SINGULARITYENV_BASE_PATH="/rnode/${host}/${port}/"
 
-# Route proxy logs to its own file
+# Adaptr logs to its own file
 singularity run "$ADAPTR_SIF" > "$JOB_LOGS/adaptr.log" 2>&1 &
-
 sleep 3
 
-# ----------------------------------------
 # 4. Start LLM Services
-# ----------------------------------------
 log "Starting Ollama on port $OLLAMA_PORT..."
 export SINGULARITYENV_OLLAMA_HOST="127.0.0.1:${OLLAMA_PORT}"
 export SINGULARITYENV_OLLAMA_MODELS="$USER_OLLAMA_MODELS"
@@ -52,7 +47,7 @@ singularity exec $NV_FLAG \
 # Active Wait Loop for Ollama
 log "Waiting for Ollama API to become responsive..."
 for i in {1..30}; do
-    if curl -s http://127.0.0.1:${OLLAMA_PORT} > /dev/null; then
+    if curl -s "http://127.0.0.1:${OLLAMA_PORT}" > /dev/null; then
         log "Ollama API is ONLINE."
         break
     fi
@@ -66,26 +61,23 @@ done
 log "Pre-loading model: <%= context.llm_model %>"
 singularity exec $NV_FLAG "$OLLAMA_SIF" ollama run "<%= context.llm_model %>" /dev/null &
 
-# ----------------------------------------
 # 4.5 Start the HPC MCP Server (Host-level SSE Mode)
-# ----------------------------------------
-# log "Starting AnythingLLM-HPC-MCP server on host port $MCP_PORT..."
+#log "Starting AnythingLLM-HPC-MCP server on host port $MCP_PORT..."
 #
-# /opt/llm/AnythingLLM-HPC-MCP --http $MCP_PORT > "$JOB_LOGS/mcp-hpc.log" 2>&1 &
-# MCP_PID=$!
+#/opt/unmanaged/images/llm/AnythingLLM-HPC-MCP --http $MCP_PORT > "$JOB_LOGS/mcp-hpc.log" 2>&1 &
+#MCP_PID=$!
 #
-# Quick check to ensure the MCP server didn't crash instantly
-# sleep 2
-# if ! kill -0 $MCP_PID 2>/dev/null; then
+#sleep 2
+#if ! kill -0 $MCP_PID 2>/dev/null; then
 #    log "ERROR: HPC MCP Server failed to start! Check logs/mcp-hpc.log"
-# fi
+#fi
 
+# 5. Start AnythingLLM
 log "Starting AnythingLLM on internal port $ALLM_INTERNAL_PORT..."
 export SINGULARITYENV_STORAGE_DIR="/app/server/storage"
 export SINGULARITYENV_SERVER_PORT="$ALLM_INTERNAL_PORT"
 
-# Ensure the .env exists before starting
-cat <<ENV > "${ALLM_USER_STORAGE}/.env"
+cat <<EOF > "${ALLM_USER_STORAGE}/.env"
 SERVER_PORT=${ALLM_INTERNAL_PORT}
 STORAGE_DIR=/app/server/storage
 LLM_PROVIDER=ollama
@@ -93,35 +85,30 @@ OLLAMA_BASE_PATH=http://127.0.0.1:${OLLAMA_PORT}
 OLLAMA_MODEL_PREF="<%= context.llm_model %>"
 VECTOR_DB=lancedb
 EMBEDDING_ENGINE=native
-ENV
-
-log "Launching AnythingLLM Core (Routing output to logs/anythingllm.log)..."
+EOF
 
 # Run AnythingLLM in the background and route output to its own log
+log "Launching AnythingLLM Core..."
 singularity run $NV_FLAG --writable-tmpfs \
     --bind "${ALLM_USER_STORAGE}:/app/server/storage" \
+    --bind "${ALLM_USER_STORAGE}/hotdir:/app/collector/hotdir" \
     --bind "${ALLM_USER_STORAGE}/.env:/app/server/.env" \
     --bind "${ALLM_USER_STORAGE}/prisma_client:/app/server/node_modules/.prisma" \
     "$ALLM_SIF" > "$JOB_LOGS/anythingllm.log" 2>&1 &
-
 ALLM_PID=$!
 
-# ----------------------------------------
-# 5. Polling Loop for the Ready Flag
-# ----------------------------------------
-log "Waiting for AnythingLLM backend to initialize before enabling the Connect button..."
-
+# 6. Polling Loop
+log "Waiting for AnythingLLM backend to initialize..."
 while ! grep -q "Primary server in HTTP mode listening on port" "$JOB_LOGS/anythingllm.log"; do
     sleep 2
     if ! kill -0 $ALLM_PID 2>/dev/null; then
-        log "ERROR: AnythingLLM process died unexpectedly! Check logs/anythingllm.log"
+        log "ERROR: AnythingLLM process died unexpectedly!"
         exit 1
     fi
 done
 
-log "AnythingLLM is FULLY READY! Flagging view to show Connect button."
-
 # Append the GPU flag and the Ready flag to the OOD connection file!
+log "AnythingLLM is FULLY READY!"
 echo "has_gpu: \"$HAS_GPU\"" >> connection.yml
 echo "is_ready: \"true\"" >> connection.yml
 
