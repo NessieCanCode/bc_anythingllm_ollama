@@ -23,10 +23,10 @@ mkdir -p "$USER_OLLAMA_MODELS/blobs"
 mkdir -p "$USER_OLLAMA_MODELS/manifests"
 
 # 3. Start adaptr Server (SPA Subpath Router / Direct Proxy Mode)
-log "Starting adaptr SPA subpath router on port $EXTERNAL_PORT to $ALLM_INTERNAL_PORT..."
+log "Starting adaptr SPA subpath router on port $EXTERNAL_PORT to $ANYTHINGLLM_INTERNAL_PORT..."
 
 export SINGULARITYENV_EXTERNAL_PORT=$EXTERNAL_PORT
-export SINGULARITYENV_TARGET="127.0.0.1:${ALLM_INTERNAL_PORT}"
+export SINGULARITYENV_TARGET="127.0.0.1:${ANYTHINGLLM_INTERNAL_PORT}"
 export SINGULARITYENV_BASE_PATH="/rnode/${host}/${port}/"
 
 # Adaptr logs to its own file
@@ -73,12 +73,12 @@ singularity exec $NV_FLAG "$OLLAMA_SIF" ollama run "<%= context.llm_model %>" /d
 #fi
 
 # 5. Start AnythingLLM
-log "Starting AnythingLLM on internal port $ALLM_INTERNAL_PORT..."
+log "Starting AnythingLLM on internal port $ANYTHINGLLM_INTERNAL_PORT..."
 export SINGULARITYENV_STORAGE_DIR="/app/server/storage"
-export SINGULARITYENV_SERVER_PORT="$ALLM_INTERNAL_PORT"
+export SINGULARITYENV_SERVER_PORT="$ANYTHINGLLM_INTERNAL_PORT"
 
-cat <<EOF > "${ALLM_USER_STORAGE}/.env"
-SERVER_PORT=${ALLM_INTERNAL_PORT}
+cat <<EOF > "${ANYTHINGLLM_USER_STORAGE}/.env"
+SERVER_PORT=${ANYTHINGLLM_INTERNAL_PORT}
 STORAGE_DIR=/app/server/storage
 LLM_PROVIDER=ollama
 OLLAMA_BASE_PATH=http://127.0.0.1:${OLLAMA_PORT}
@@ -90,18 +90,18 @@ EOF
 # Run AnythingLLM in the background and route output to its own log
 log "Launching AnythingLLM Core..."
 singularity run $NV_FLAG --writable-tmpfs \
-    --bind "${ALLM_USER_STORAGE}:/app/server/storage" \
-    --bind "${ALLM_USER_STORAGE}/hotdir:/app/collector/hotdir" \
-    --bind "${ALLM_USER_STORAGE}/.env:/app/server/.env" \
-    --bind "${ALLM_USER_STORAGE}/prisma_client:/app/server/node_modules/.prisma" \
-    "$ALLM_SIF" > "$JOB_LOGS/anythingllm.log" 2>&1 &
-ALLM_PID=$!
+    --bind "${ANYTHINGLLM_USER_STORAGE}:/app/server/storage" \
+    --bind "${ANYTHINGLLM_USER_STORAGE}/hotdir:/app/collector/hotdir" \
+    --bind "${ANYTHINGLLM_USER_STORAGE}/.env:/app/server/.env" \
+    --bind "${ANYTHINGLLM_USER_STORAGE}/prisma_client:/app/server/node_modules/.prisma" \
+    "$ANYTHINGLLM_SIF" > "$JOB_LOGS/anythingllm.log" 2>&1 &
+ANYTHINGLLM_PID=$!
 
 # 6. Polling Loop
 log "Waiting for AnythingLLM backend to initialize..."
 while ! grep -q "Primary server in HTTP mode listening on port" "$JOB_LOGS/anythingllm.log"; do
     sleep 2
-    if ! kill -0 $ALLM_PID 2>/dev/null; then
+    if ! kill -0 $ANYTHINGLLM_PID 2>/dev/null; then
         log "ERROR: AnythingLLM process died unexpectedly!"
         exit 1
     fi
@@ -113,4 +113,4 @@ echo "has_gpu: \"$HAS_GPU\"" >> connection.yml
 echo "is_ready: \"true\"" >> connection.yml
 
 # Keep the SLURM job alive
-wait $ALLM_PID
+wait $ANYTHINGLLM_PID
