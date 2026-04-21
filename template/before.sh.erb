@@ -17,10 +17,10 @@ rm -rf /tmp/ollama*
 module purge
 module load singularityce/4.1.0
 
-# 1. Ports: Define the ports required for the relay and the app
+# 1. Ports: Define the ports required for the relay and app services
 export port=$(find_port)                  # The port OOD expects to connect to
 export EXTERNAL_PORT=${port}              # adaptr listens here
-export ALLM_INTERNAL_PORT=$(find_port)    # AnythingLLM runs here
+export ANYTHINGLLM_INTERNAL_PORT=$(find_port)    # AnythingLLM runs here
 export OLLAMA_PORT=$(find_port)           # Ollama runs here
 #export MCP_PORT=$(find_port)              # HPC MCP Server runs here
 
@@ -28,26 +28,26 @@ export OLLAMA_PORT=$(find_port)           # Ollama runs here
 #export MCP_AUTH_TOKEN=$(openssl rand -hex 16)
 
 log "Assigned OOD Port: $port"
-log "Assigned AnythingLLM Internal Port: $ALLM_INTERNAL_PORT"
+log "Assigned AnythingLLM Internal Port: ANYTHINGLLM_INTERNAL_PORT"
 log "Assigned Ollama API Port: $OLLAMA_PORT"
 #log "Assigned MCP Server Port: $MCP_PORT"
 #log "Generated secure session token for MCP authentication"
 
 # 2. Define Image Paths
 export OLLAMA_SIF="/opt/llm/ollama.sif"
-export ALLM_SIF="/opt/llm/anythingllm.sif"
+export ANYTHINGLLM_SIF="/opt/llm/anythingllm.sif"
 export ADAPTR_SIF="/opt/llm/adaptr.sif"
 export OLLAMA_MODELS_DIR="/opt/llm/models"
 
 # 3. Define user storage
-export ALLM_USER_STORAGE="${HOME}/.anythingllm_storage"
-mkdir -p "$ALLM_USER_STORAGE/prisma_client"
-mkdir -p "$ALLM_USER_STORAGE/hotdir"
+export ANYTHINGLLM_USER_STORAGE="${HOME}/.anythingllm_storage"
+mkdir -p "$ANYTHINGLLM_USER_STORAGE/prisma_client"
+mkdir -p "$ANYTHINGLLM_STORAGE/hotdir"
 export OLLAMA_HOST="0.0.0.0:${OLLAMA_PORT}"
 
 # 4. Pre-configure AnythingLLM to bind to the internal port
-cat <<EOF > "$ALLM_USER_STORAGE/.env"
-SERVER_PORT=$ALLM_INTERNAL_PORT
+cat <<EOF > "$ANYTHINGLLM_USER_STORAGE/.env"
+SERVER_PORT=$ANYTHINGLLM_INTERNAL_PORT
 STORAGE_DIR=/app/server/storage
 LLM_PROVIDER=ollama
 OLLAMA_BASE_PATH=http://127.0.0.1:${OLLAMA_PORT}
@@ -57,8 +57,8 @@ EMBEDDING_ENGINE=native
 EOF
 
 # 4.5 Create MCP server config for AnythingLLM (SSE Mode)
-#mkdir -p "$ALLM_USER_STORAGE/plugins"
-#cat <<EOF > "$ALLM_USER_STORAGE/plugins/anythingllm_mcp_servers.json"
+#mkdir -p "$ANYTHINGLLM_USER_STORAGE/plugins"
+#cat <<EOF > "$ANYTHINGLLM_USER_STORAGE/plugins/anythingllm_mcp_servers.json"
 #{
 #  "mcpServers": {
 #    "HPC": {
