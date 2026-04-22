@@ -28,7 +28,7 @@ export OLLAMA_PORT=$(find_port)           # Ollama runs here
 #export MCP_AUTH_TOKEN=$(openssl rand -hex 16)
 
 log "Assigned OOD Port: $port"
-log "Assigned AnythingLLM Internal Port: ANYTHINGLLM_INTERNAL_PORT"
+log "Assigned AnythingLLM Internal Port: $ANYTHINGLLM_INTERNAL_PORT"
 log "Assigned Ollama API Port: $OLLAMA_PORT"
 #log "Assigned MCP Server Port: $MCP_PORT"
 #log "Generated secure session token for MCP authentication"
