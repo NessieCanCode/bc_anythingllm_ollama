@@ -42,7 +42,7 @@ export OLLAMA_MODELS_DIR="/opt/llm/models"
 # 3. Define user storage
 export ANYTHINGLLM_USER_STORAGE="${HOME}/.anythingllm_storage"
 mkdir -p "$ANYTHINGLLM_USER_STORAGE/prisma_client"
-mkdir -p "$ANYTHINGLLM_STORAGE/hotdir"
+mkdir -p "$ANYTHINGLLM_USER_STORAGE/hotdir"
 export OLLAMA_HOST="0.0.0.0:${OLLAMA_PORT}"
 
 # 4. Pre-configure AnythingLLM to bind to the internal port
