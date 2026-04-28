@@ -1,5 +1,7 @@
 # Open OnDemand: AnythingLLM + Ollama
 
+> **Reference deployment — not a maintained product.** This is a sample integration of AnythingLLM + Ollama + adaptr running as an Open OnDemand batch_connect job. It demonstrates the two supported products working together in a real LLM frontend deployment. For the supported products, see [hpc-ai-tools](https://github.com/NessieCanCode/hpc-ai-tools) (the MCP server) and [adaptr](https://github.com/sqoia-dev/adaptr) (the SPA subpath router).
+
 A production-ready Open OnDemand (OOD) interactive application that provisions a completely private, secure, and isolated Large Language Model (LLM) workspace on HPC compute nodes.
 
 This package orchestrates **AnythingLLM** (for the web UI, vector database, and Retrieval-Augmented Generation/RAG) and **Ollama** (for local model serving) within a single Slurm batch job using Singularity/Apptainer. 
