@@ -75,7 +75,7 @@ Singularity> exit
 1. **Clone the repository** into your OOD interactive apps directory:
    ```bash
    cd /var/www/ood/apps/sys
-   git clone git@github.com:NessieCanCode/ood_anythingllm-ollama.git anythingllm-ollama
+   git clone https://github.com/NessieCanCode/bc_anythingllm_ollama.git anythingllm-ollama
    ```
 
 2. **Update Image Paths:**

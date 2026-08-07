@@ -229,7 +229,7 @@
   gpu_types = %w[none any a100 h100 l40s h200nvl]
 %>
 ---
-cluster: "pinnacles"
+cluster: <%= ENV.fetch("OOD_CLUSTER_ID", "my_cluster") %>
 
 form:
   - modules

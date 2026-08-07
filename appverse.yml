@@ -1,0 +1,17 @@
+title: "AnythingLLM + Ollama"
+description: "Launch an isolated AnythingLLM and Ollama workspace in an Open OnDemand compute-node session."
+software: "AnythingLLM"
+app_type: "batch-connect-basic"
+implementation_tags:
+  - "batch connect"
+  - "containerized"
+  - "gpu-enabled"
+maintainer:
+  name: "Robert Romero"
+  support_url: "https://github.com/NessieCanCode/bc_anythingllm_ollama/issues"
+website: "https://anythingllm.com/"
+docs: "https://github.com/NessieCanCode/bc_anythingllm_ollama#readme"
+tags:
+  - "slurm"
+  - "linux"
+  - "artificial intelligence"
